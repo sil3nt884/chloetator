@@ -1,0 +1,32 @@
+version: '3.3'
+networks:
+  default:
+    driver: bridge
+    name: node-server
+services:
+  node_container:
+    container_name: node-server
+    hostname: noder-server
+    image: sil3nt884/chloetator1.8
+    ports:
+      - 8008:433
+  mongodb_container:
+    container_name: mongo
+    hostname: mongo
+    image: mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+      MONGO_INITDB_DATABASE: chloetarot
+    ports:
+      - 27017:27017
+    volumes:
+      - mongodb_data_container:/data/db
+  mongosetup:
+    image: mongo
+    depends_on:
+      -  mongodb_container
+    command: mongo admin -u root -p root --host mongo  --eval "db.getSiblingDB('chloetarot').createUser({user:'admin', pwd:'admin', roles:[{role:'readWrite',db:'chloetarot'}]});"
+volumes:
+  mongodb_data_container:
+
