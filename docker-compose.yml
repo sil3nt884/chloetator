@@ -4,12 +4,12 @@ networks:
     driver: bridge
     name: node-server
 services:
-#  web:
-#    container_name: node-server
-#    hostname: noder-server
-#    image: sil3nt884/chloetator1.9
-#    ports:
-#      - 9090:433
+  web:
+    container_name: node-server
+    hostname: noder-server
+    image: sil3nt884/chloetator:v1.0
+    ports:
+      - 9090:433
   db:
     container_name: mongo
     hostname: mongo
