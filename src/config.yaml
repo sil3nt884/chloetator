@@ -4,7 +4,7 @@ acceptedIPs:
   - ::ffff:88.97.10.194
   - ::ffff:192.168.1.1
   - localhost
-mongodbURL : mongodb://mongo/chloetarot
+mongodbURL : mongodb://localhost/chloetarot
 key: test
 cert: test
 dbUser: admin

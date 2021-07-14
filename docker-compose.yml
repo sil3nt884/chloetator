@@ -1,0 +1,47 @@
+version: '3.3'
+networks:
+  default:
+    driver: bridge
+    name: node-server
+services:
+#  web:
+#    container_name: node-server
+#    hostname: noder-server
+#    image: sil3nt884/chloetator1.9
+#    ports:
+#      - 9090:433
+  db:
+    container_name: mongo
+    hostname: mongo
+    image: mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+      MONGO_INITDB_DATABASE: chloetarot
+    ports:
+      - 27017:27017
+    volumes:
+      - /root/home/db/data:/data/db
+  mongosetup:
+    image: mongo
+    depends_on:
+      - db
+    command: mongo admin -u root -p root --host mongo  --eval "db.getSiblingDB('chloetarot').createUser({user:'admin', pwd:'admin', roles:[{role:'readWrite',db:'chloetarot'}]});"
+
+  zookeeper:
+    image: wurstmeister/zookeeper
+    ports:
+      - "2181:2181"
+  kafka:
+    depends_on:
+      - zookeeper
+    image: wurstmeister/kafka
+    ports:
+      - 9092:9092
+    environment:
+      DOCKER_API_VERSION: 1.22
+      KAFKA_ADVERTISED_HOST_NAME: localhost
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock

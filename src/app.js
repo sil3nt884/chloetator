@@ -1,22 +1,25 @@
-
 const http2 = require('http2');
 const koa = require('koa')
 const fs = require('fs')
 const serve = require('koa-static')
-const { ApolloServer } = require('apollo-server-koa');
+const {ApolloServer} = require('apollo-server-koa');
 const graphqlSchema = require('./schema')
 const mongoose = require('mongoose')
 const auth = require('./auth/auth')
 const cron = require('node-cron')
 const configHelper = require('./config')
+const kafkaProducer = require('./kafka/KafkaProducer')
+const kafkaConsumer = require('./kafka/kafkaConsumer')
+const bodyParser = require('koa-bodyparser');
 
 
-async function run () {
+async function run() {
 
-   const config = configHelper().getConfig()
+
+    const config = configHelper().getConfig()
 
     cron.schedule('0 0 * * *', async () => {
-      await auth.generatePassword()
+        await auth.generatePassword()
     }, {});
 
     await auth.generatePassword();
@@ -38,6 +41,8 @@ async function run () {
 
     const app = new koa();
 
+    app.use(bodyParser());
+
     const REACT_ROUTER_PATHS = [
         '/reviews',
         '/bookings',
@@ -46,21 +51,20 @@ async function run () {
     ];
 
     app.use(async (ctx, next) => {
-            if (REACT_ROUTER_PATHS.includes(ctx.request.path)) {
-                ctx.request.path = '/';
-            }
-            await next();
-        })
+        if (REACT_ROUTER_PATHS.includes(ctx.request.path)) {
+            ctx.request.path = '/';
+        }
+        await next();
+    })
 
 
     app.use(async (ctx, next) => {
         const accpetedIPs = config.acceptedIPs
-        const ip =ctx.request.ip
+        const ip = ctx.request.ip
         const url = ctx.request.url
-        if(accpetedIPs.filter(address => ip === address).length >0 && url === '/password') {
+        if (accpetedIPs.filter(address => ip === address).length > 0 && url === '/password') {
             ctx.body = auth.authObject.dbPassword
-        }
-        else if(url === '/password'){
+        } else if (url === '/password') {
             ctx.body = 'not allowed'
             ctx.status = 403
         }
@@ -68,20 +72,32 @@ async function run () {
 
     })
 
+    app.use(async (ctx, next) => {
+        if (ctx.request.url === '/kafka') {
+            ctx.body = 'ok'
+            await kafkaProducer(ctx.request.body)
+        }
+        await next();
 
-    app.use(serve( "src/build")); //serve the build directory
+
+    })
+
+    kafkaConsumer()
+
+
+    app.use(serve("src/build")); //serve the build directory
 
 
     const graphqlServer = new ApolloServer({
         schema: graphqlSchema,
-        context: (req)=> {
+        context: (req) => {
             auth.setMatch(req.ctx.request.header.password)
         }
 
 
     });
     await graphqlServer.start();
-    graphqlServer.applyMiddleware({ app , path:"/graphql" });
+    graphqlServer.applyMiddleware({app, path: "/graphql"});
 
 
     const server = http2.createSecureServer(options, app.callback());
@@ -89,10 +105,10 @@ async function run () {
     console.log('Server Ready and Listening on 443')
 
 
-    process.on('exit', ()=> {
+    process.on('exit', () => {
         mongoose.disconnect()
     });
-    process.on('SIGINT', ()=> mongoose.disconnect());
+    process.on('SIGINT', () => mongoose.disconnect());
 }
 
 run()

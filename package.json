@@ -7,8 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "gen": "node src/generateselfsigned.js",
     "start": "node src/app.js",
-    "mongo": "cd src/mongodb/ & docker-compose up -d",
-    "dev": "nodemon"
+    "dev": "nodemon",
+    "deploy": "heroku container:push web --app chloecratfs"
   },
   "keywords": [],
   "author": "",
@@ -20,16 +20,20 @@
     "graphql": "^15.5.1",
     "graphql-compose": "^9.0.1",
     "graphql-compose-mongoose": "^9.4.2",
+    "kafkajs": "^1.15.0",
     "koa": "^2.13.1",
+    "koa-bodyparser": "^4.3.0",
     "koa-mount": "^4.0.0",
     "koa-router": "^10.0.0",
     "koa-static": "^5.0.0",
     "mongoose": "^5.12.15",
     "node-cron": "^3.0.0",
+    "node-fetch": "^2.6.1",
     "uuid": "^8.3.2",
     "yaml": "^1.10.2"
   },
   "devDependencies": {
+    "@apollo/client": "^3.3.21",
     "nodemon": "^2.0.7",
     "selfsigned": "^1.10.11"
   }
